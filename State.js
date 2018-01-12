@@ -1,12 +1,11 @@
 class LightState {
-    constructor(light, onPress) {
-        this.light = light;
+    constructor(onPress) {
         this.nextState = null;
-        this.onPress = onPress.bind(this.light);
+        this.onPress = onPress;
     }
 
-    next() {
-        this.light.currentState = this.nextState;
+    getNext() {
+        return this.nextState;
     }
 
     setNext(state) {
@@ -15,26 +14,19 @@ class LightState {
 }
 
 class Light {
-    constructor() {
+    constructor(iniState) {
         this.lumi = null;
-        this.weakState = new LightState(this, () => this.setLumi(1));
-        this.mediumState = new LightState(this, () => this.setLumi(2));
-        this.strongState = new LightState(this, () => this.setLumi(3));
-        this.offState = new LightState(this, () => this.setLumi(0));
-        this.weakState.setNext(this.mediumState);
-        this.mediumState.setNext(this.strongState);
-        this.strongState.setNext(this.offState);
-        this.offState.setNext(this.weakState);
-        this.currentState = this.offState;
+        this.currentState = iniState;
+        this.update();
     }
 
-    init() {
-        this.currentState.onPress();
+    update() {
+        this.currentState.onPress(this);
     }
 
     onPress() {
-        this.currentState.next();
-        this.currentState.onPress();
+        this.currentState = this.currentState.getNext();
+        this.update();
     }
 
     setLumi(val) {
@@ -43,7 +35,16 @@ class Light {
     }
 }
 
-const light = new Light();
+const weakState = new LightState(light => light.setLumi(1));
+const mediumState = new LightState(light => light.setLumi(2));
+const strongState = new LightState(light => light.setLumi(3));
+const offState = new LightState(light => light.setLumi(0));
+weakState.setNext(mediumState);
+mediumState.setNext(strongState);
+strongState.setNext(offState);
+offState.setNext(weakState);
+const light = new Light(offState);
+
 light.onPress();
 light.onPress();
 light.onPress();
