@@ -1,15 +1,11 @@
 class LightState {
     constructor(onPress) {
         this.nextState = null;
-        this.onPress = onPress;
-    }
-
-    getNext() {
-        return this.nextState;
-    }
-
-    setNext(state) {
-        this.nextState = state;
+        if (Object.prototype.toString.call(onPress) === '[object Function]') {
+            this.onPress = onPress;
+        } else {
+            throw new Error('onPress should be a function');
+        }
     }
 }
 
@@ -21,11 +17,11 @@ class Light {
     }
 
     update() {
-        this.currentState.onPress(this);
+        this.currentState.onPress.call(this);
     }
 
     onPress() {
-        this.currentState = this.currentState.getNext();
+        this.currentState = this.currentState.nextState;
         this.update();
     }
 
@@ -39,13 +35,21 @@ const weakState = new LightState(light => light.setLumi(1));
 const mediumState = new LightState(light => light.setLumi(2));
 const strongState = new LightState(light => light.setLumi(3));
 const offState = new LightState(light => light.setLumi(0));
-weakState.setNext(mediumState);
-mediumState.setNext(strongState);
-strongState.setNext(offState);
-offState.setNext(weakState);
+weakState.nextState = mediumState;
+mediumState.nextState = strongState;
+strongState.nextState = offState;
+offState.nextState = weakState;
 const light = new Light(offState);
+const light2 = new Light(mediumState);
 
 light.onPress();
 light.onPress();
 light.onPress();
 light.onPress();
+
+console.log('\n');
+
+light2.onPress();
+light2.onPress();
+light2.onPress();
+light2.onPress();
